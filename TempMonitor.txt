@@ -1,0 +1,76 @@
+// This #include statement was automatically added by the Particle IDE.
+#include <Adafruit_DHT.h>
+
+// -----------------------------------------
+// Temperature and Light Monitor
+// Monitor light, temperature and Humidity 
+// Particle Photon + Particle.io Webhook + ThingSpeak 
+// 
+// -----------------------------------------
+#define DHTPIN 2
+#define DHTTYPE DHT11 // DHT11 Module
+#define publish_cycle 60000 // Only publish every 60 seconds
+const String key = "525ASS1WXKN11V4Y"; // Thingspeak api write key
+int led = D7; // Sensor Read Light
+int photoCell = A0;
+int power = A5; 
+int light; 
+double tempF; // Temperature F
+double tempC; // Temperature C
+double humidity; // Humidity
+unsigned int lastPublish = 0;
+DHT dht(DHTPIN, DHTTYPE);
+void setup() {
+    // Set Pin Modes
+    pinMode(led,OUTPUT);
+    pinMode(photoCell,INPUT);
+    pinMode(power,OUTPUT);
+    digitalWrite(power,HIGH); 
+    digitalWrite(led,LOW); 
+    // Connect variables to particle cloud
+    
+    Particle.variable("light", &light, INT);
+    Particle.variable("tempF", &tempF, DOUBLE);
+    Particle.variable("tempC", &tempC, DOUBLE);
+    Particle.variable("humidity", &humidity, DOUBLE);
+    dht.begin();
+    Serial.begin(9600);
+    delay(10000);
+} //setup
+void loop() {
+  unsigned long now = millis();
+  digitalWrite(led,HIGH); // Signal read sequence led
+  // read sensors
+  light = analogRead(photoCell);
+  delay(100);  
+  humidity = dht.getHumidity();
+  tempC = dht.getTempCelcius();
+  tempF = dht.getTempFarenheit();
+  // DHT Read ok?
+  if (isnan(humidity) || isnan(tempF) || isnan(tempC)) {
+    Serial.println("");
+    Serial.println("Failed to read from DHT sensor!");
+    Serial.println("humidity=" + String(humidity) + " tempF=" + String(tempF) + " tempC=" + String(tempC));
+    Serial.println("");
+    return; // exit loop and try again
+  }
+  // Display to serial
+  Serial.println();
+  Serial.print("humidity=" + String(humidity) + " tempF=" + String(tempF) + " tempC=" + String(tempC) + " light=" + String(light));
+  delay(200);
+  // Publish to thinkspeak
+  if ((now - lastPublish) > publish_cycle) {
+    Particle.publish("thingSpeakWrite_All", "{ \"1\": \"" + String(humidity) + "\"," +
+       "\"2\": \"" + String(tempC) + "\"," +
+       "\"3\": \"" + String(tempF) + "\"," +
+       "\"4\": \"" + String(light) + "\"," +
+       "\"k\": \"" + key + "\" }", 60, PRIVATE);
+    lastPublish = now;
+    Serial.println(" - Published!");
+  } else {
+      Serial.println();
+  }
+  digitalWrite(led,LOW);
+  delay(2000); 
+} // loop
+ 

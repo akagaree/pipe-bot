@@ -1,0 +1,95 @@
+// ---------------------------------------------------------------------------
+// NewPing library sketch that does a ping about 20 times per second.
+// ---------------------------------------------------------------------------
+// Code to run the ROVER Robot via Ultrasonic detection
+// 
+// By Paul Collins. 
+//
+// NOTE NewPing library has been modified to allow for timer interrupt
+//   clash between NewPing and IRremote library files. 
+
+#include <NewPing.h>
+
+
+
+#define TRIGGER_PIN  11  // Arduino pin tied to trigger pin on the ultrasonic sensor.
+#define ECHO_PIN     12  // Arduino pin tied to echo pin on the ultrasonic sensor.
+#define MAX_DISTANCE 200 // Maximum distance we want to ping for (in centimeters). Maximum sensor distance is rated at 400-500cm.
+#define MotorA_1     2
+#define MotorA_2     3
+#define MotorB_1     5
+#define MotorB_2     4
+#define EnableA      9
+#define EnableB      10
+ 
+ 
+NewPing sonar1(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE); // NewPing setup of pins and maximum distance.
+
+
+
+long dist1;
+int wait = 200;
+
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(2, OUTPUT);
+  pinMode(3, OUTPUT);
+  pinMode(4, OUTPUT);
+  pinMode(5, OUTPUT);
+}
+
+
+
+
+void loop() {
+
+
+ dist1=sonar1.ping_cm();
+
+ if(dist1==0){
+  dist1 = MAX_DISTANCE;
+  }
+
+ 
+ if(dist1<=40) {
+  digitalWrite(EnableA, HIGH);
+  
+  digitalWrite(EnableB, HIGH);
+  
+  digitalWrite(MotorA_1, LOW);   //Has to be LOW,HIGH    
+  digitalWrite(MotorA_2, HIGH);
+  
+  digitalWrite(MotorB_1, HIGH);  //HIGH, LOW
+  digitalWrite(MotorB_2, LOW);
+  delay(400);
+  stopMotors();
+ }
+ else {
+  randNumber = random(1000, 2000);
+  if randNumber = 1500 stopMotors();
+  delay(randNumber);
+
+  digitalWrite(MotorA_1, HIGH); 
+  digitalWrite(MotorA_2, LOW);
+  digitalWrite(MotorB_1, HIGH);
+  digitalWrite(MotorB_2, LOW);
+  
+  
+  digitalWrite(EnableA, HIGH);
+  digitalWrite(EnableB, HIGH);
+  
+ }
+ 
+}
+
+void stopMotors(){
+  digitalWrite(MotorA_1, LOW); 
+  digitalWrite(MotorA_2, LOW);
+  digitalWrite(MotorB_1, LOW);
+  digitalWrite(MotorB_2, LOW);
+  digitalWrite(EnableA, LOW);
+  digitalWrite(EnableB, LOW);
+
+}
+
